@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">WalletEase</string>
+
+<!--    started files -->
+    <string name="started_msg">Take control of your finances with WalletEase! Track expenses, set budgets, and achieve your financial goals🚀</string>
+    <string name="btn_get_start">Get Start</string>
+    <string name="welcome_msg">WELCOME</string>
+
 </resources>
