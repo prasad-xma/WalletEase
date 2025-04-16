@@ -14,4 +14,7 @@
     <string name="username_txt">Name</string>
     <string name="already_txt">You already have an account?</string>
     <string name="login_txt">Login</string>
+
+<!--    Login Page-->
+    <string name="still_acc_txt">Still don not have an account?</string>
 </resources>
