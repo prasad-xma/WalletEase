@@ -1,10 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/loginbkg"
+    android:gravity="center"
+    android:orientation="vertical"
     tools:context=".RegisterActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="170dp"
+        app:cardCornerRadius="30dp"
+        app:cardElevation="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <TextView
+                android:id="@+id/textView7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/tvReg"
+                android:textColor="@color/purple"
+                android:textSize="34sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etUserName"
+                android:layout_width="360dp"
+                android:layout_height="58dp"
+                android:layout_marginBottom="4dp"
+                android:autofillHints=""
+                android:background="@drawable/custom_edittext"
+                android:ems="10"
+                android:hint="@string/username_txt"
+                android:inputType="text"
+                android:padding="10dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/black" />
+
+            <EditText
+                android:id="@+id/etEmail"
+                android:layout_width="364dp"
+                android:layout_height="58dp"
+                android:layout_marginBottom="4dp"
+                android:autofillHints=""
+                android:background="@drawable/custom_edittext"
+                android:ems="10"
+                android:hint="@string/etEmail_txt"
+                android:inputType="textEmailAddress"
+                android:padding="10dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/material_dynamic_neutral20" />
+
+            <EditText
+                android:id="@+id/etPassword"
+                android:layout_width="361dp"
+                android:layout_height="58dp"
+                android:layout_marginBottom="4dp"
+                android:autofillHints=""
+                android:background="@drawable/custom_edittext"
+                android:ems="10"
+                android:hint="@string/pass_txt"
+                android:inputType="textPassword"
+                android:padding="10dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/black" />
+
+            <EditText
+                android:id="@+id/etConfPass"
+                android:layout_width="360dp"
+                android:layout_height="58dp"
+                android:layout_marginBottom="4dp"
+                android:autofillHints=""
+                android:background="@drawable/custom_edittext"
+                android:ems="10"
+                android:hint="@string/confPass_txt"
+                android:inputType="textPassword"
+                android:padding="10dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/material_dynamic_neutral20" />
+
+            <Button
+                android:id="@+id/btnRegister"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/purple"
+                android:text="@string/tvReg"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginTop="10dp"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/textView8"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:gravity="center"
+        android:text="@string/already_txt"
+        android:textColor="@color/black"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvNavigateLogin"
+        android:layout_width="182dp"
+        android:layout_height="47dp"
+        android:background="@drawable/custom_edittext"
+        android:gravity="center"
+        android:text="@string/login_txt"
+        android:textColor="@color/purple"
+        android:textSize="24sp"
+        android:layout_marginTop="10dp"
+        android:textStyle="bold" />
+</LinearLayout>
