@@ -1,12 +1,18 @@
 package com.example.walletease
 
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 class HomeActivity : AppCompatActivity() {
+
+    private lateinit var tvWelcome : TextView
+    private lateinit var sharedPreferences :SharedPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -16,5 +22,17 @@ class HomeActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        tvWelcome = findViewById(R.id.tvWelcomeMsg)
+        sharedPreferences = getSharedPreferences("user_profile", MODE_PRIVATE)
+
+        displayWelcomeMessage()
+    }
+
+    private fun displayWelcomeMessage(){
+        val uName = sharedPreferences.getString("name", "User")
+        val uEmail = sharedPreferences.getString("email", "")
+
+        tvWelcome.text = "Welcome, $uName\n$uEmail"
     }
 }
