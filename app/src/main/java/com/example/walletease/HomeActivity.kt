@@ -14,6 +14,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var tvWelcome : TextView
     private lateinit var sharedPreferences :SharedPreferences
     private lateinit var btnLogout: TextView
+    private lateinit var holderName: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +26,7 @@ class HomeActivity : AppCompatActivity() {
             insets
         }
 
+        holderName = findViewById(R.id.tvHolderName)
         btnLogout = findViewById(R.id.tvBtnLogout)
         tvWelcome = findViewById(R.id.tvWelcomeMsg)
         sharedPreferences = getSharedPreferences("user_profile", MODE_PRIVATE)
@@ -41,6 +43,8 @@ class HomeActivity : AppCompatActivity() {
         val uEmail = sharedPreferences.getString("email", "")
 
         tvWelcome.text = "Welcome, $uName\n$uEmail"
+
+        holderName.text = "$uName"
     }
 
     private fun logoutUser() {

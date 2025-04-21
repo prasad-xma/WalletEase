@@ -19,4 +19,8 @@
     <string name="still_acc_txt">Still don not have an account?</string>
     <string name="profile_icon">profile icon</string>
     <string name="divider_img">divider_img</string>
+
+<!--    Home page -->
+    <string name="tvHolder">Card Holder: </string>
+    <string name="crd_no">222 2555 5444 0000</string>
 </resources>
