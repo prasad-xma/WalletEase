@@ -18,4 +18,5 @@
     <!--    Login Page-->
     <string name="still_acc_txt">Still don not have an account?</string>
     <string name="profile_icon">profile icon</string>
+    <string name="divider_img">divider_img</string>
 </resources>
