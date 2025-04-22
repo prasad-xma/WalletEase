@@ -9,6 +9,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import java.io.File
+import java.io.IOException
 
 class HomeActivity : AppCompatActivity() {
 
@@ -39,6 +41,8 @@ class HomeActivity : AppCompatActivity() {
         sharedPreferences = getSharedPreferences("user_profile", MODE_PRIVATE)
 
         displayWelcomeMessage()
+        loadTotalAmount()
+        updateTotalAmountTextView()
 
         btnLogout.setOnClickListener {
             logoutUser()
@@ -73,6 +77,34 @@ class HomeActivity : AppCompatActivity() {
     private fun loadTotalAmount() {
         totalAmount = 0.00
 
+        try {
+            val file = File(filesDir, "deposits.txt")
+            if(file.exists()){
+                file.forEachLine { line ->
+                    val parts = line.split(",")
+                    if(parts.isNotEmpty()) {
+                        totalAmount += parts[0].toDoubleOrNull() ?: 0.00
+                    }
+                }
+            }
+            val withdrawFile = File(filesDir, "withdrawws.txt")
+            if(withdrawFile.exists()) {
+                withdrawFile.forEachLine { line ->
+                    val parts = line.split(",")
+                    if(parts.isNotEmpty()) {
+                        totalAmount -= parts[0].toDoubleOrNull() ?: 0.00
+                    }
+                }
+            }
 
+        } catch (e: IOException){
+            e.printStackTrace()
+        }
     }
+
+    // update total amount tv value
+    private fun updateTotalAmountTextView() {
+        tvTotalAmount.text = "${String.format("%.2f", totalAmount)}"
+    }
+
 }
