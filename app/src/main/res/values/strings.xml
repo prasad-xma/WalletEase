@@ -20,7 +20,12 @@
     <string name="profile_icon">profile icon</string>
     <string name="divider_img">divider_img</string>
 
-<!--    Home page -->
+    <!--    Home page -->
     <string name="tvHolder">Card Holder: </string>
     <string name="crd_no">222 2555 5444 0000</string>
+    <string name="tvAmtTxt">Total amount:</string>
+
+<!--    Transaction Page-->
+    <string name="tvTransactionHeader">Transactions</string>
+    <string name="headerbg">headerBg</string>
 </resources>
