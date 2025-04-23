@@ -46,6 +46,7 @@ class HomeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadTotalAmount()
+        loadMonthlyBudget()
         updateTotalAmountTextView()
         updateBudgetProgress()
     }
@@ -74,6 +75,8 @@ class HomeActivity : AppCompatActivity() {
         displayWelcomeMessage()
         loadTotalAmount()
         updateTotalAmountTextView()
+        updateBudgetProgress()
+        loadMonthlyBudget()
 
         btnLogout.setOnClickListener {
             logoutUser()
@@ -84,8 +87,7 @@ class HomeActivity : AppCompatActivity() {
             startActivity(Intent(this, TransactionActivity::class.java))
         }
 
-        tvTotalAmount.text = String.format("%.2f", totalAmount)
-        updateBudgetProgress()
+        // tvTotalAmount.text = String.format("%.2f", totalAmount)
 
         btnSetBudget.setOnClickListener {
             showSetBudgetDialog()
@@ -130,11 +132,11 @@ class HomeActivity : AppCompatActivity() {
             }
             val withdrawFile = File(filesDir, "withdrawals.txt")
             if(withdrawFile.exists()) {
-                withdrawFile.forEachLine { line ->
-                    val parts = line.split(",")
-                    if(parts.isNotEmpty()) {
-                        totalAmount -= parts[0].toDoubleOrNull() ?: 0.00
-                    }
+                withdrawFile.forEachLine {
+                    val parts = it.split(",")
+                    val amount = parts[0].toDoubleOrNull() ?: 0.0
+                    totalAmount -= amount
+                    totalSpent += amount
                 }
             }
 
@@ -145,7 +147,7 @@ class HomeActivity : AppCompatActivity() {
 
     // update total amount tv value
     private fun updateTotalAmountTextView() {
-        tvTotalAmount.text = "${String.format("%.2f", totalAmount)}"
+        tvTotalAmount.text = String.format("%.2f", totalAmount)
     }
 
     // show set budget dialog
@@ -165,8 +167,7 @@ class HomeActivity : AppCompatActivity() {
                     Toast.makeText(this, "Budget can't exceed total balance!", Toast.LENGTH_SHORT).show()
                 } else {
                     monthlyBudget = budgetInput
-                    totalSpent = 0.0
-                    // update the budget progress
+                    saveMonthlyBudget()
                     updateBudgetProgress()
                     Toast.makeText(this, "Budget set: $monthlyBudget", Toast.LENGTH_SHORT).show()
                 }
@@ -200,15 +201,10 @@ class HomeActivity : AppCompatActivity() {
 
     private fun createNotificationChannel() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name ="Budget Warning"
-            val descriptionText = "Notifications for budget warnings"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
+            val channel = NotificationChannel(CHANNEL_ID, "Budget Warning", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = "Notifications for budget warnings"
             }
-
-            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
     }
 
@@ -220,8 +216,22 @@ class HomeActivity : AppCompatActivity() {
             .setContentText("You have used over 90% of your monthly budget!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(1, builder.build())
+        getSystemService(NotificationManager::class.java).notify(1, builder.build())
     }
 
+    private fun saveMonthlyBudget() {
+        val file = File(filesDir, "monthly_budget.txt")
+        file.writeText(monthlyBudget.toString())
+    }
+
+    private fun loadMonthlyBudget() {
+        val file = File(filesDir, "monthly_budget.txt")
+        if(file.exists()) {
+            val content = file.readText().toDoubleOrNull()
+
+            if(content != null) {
+                monthlyBudget = content
+            }
+        }
+    }
 }
