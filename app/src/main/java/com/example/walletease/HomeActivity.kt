@@ -1,13 +1,21 @@
 package com.example.walletease
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import java.io.File
@@ -39,6 +47,7 @@ class HomeActivity : AppCompatActivity() {
         super.onResume()
         loadTotalAmount()
         updateTotalAmountTextView()
+        updateBudgetProgress()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +83,15 @@ class HomeActivity : AppCompatActivity() {
         buttonNavDeposit.setOnClickListener {
             startActivity(Intent(this, TransactionActivity::class.java))
         }
+
+        tvTotalAmount.text = String.format("%.2f", totalAmount)
+        updateBudgetProgress()
+
+        btnSetBudget.setOnClickListener {
+            showSetBudgetDialog()
+        }
+
+        createNotificationChannel()
     }
 
     private fun displayWelcomeMessage(){
@@ -98,6 +116,7 @@ class HomeActivity : AppCompatActivity() {
     // load total amount
     private fun loadTotalAmount() {
         totalAmount = 0.00
+        totalSpent = 0.00
 
         try {
             val file = File(filesDir, "deposits.txt")
@@ -127,6 +146,82 @@ class HomeActivity : AppCompatActivity() {
     // update total amount tv value
     private fun updateTotalAmountTextView() {
         tvTotalAmount.text = "${String.format("%.2f", totalAmount)}"
+    }
+
+    // show set budget dialog
+    private fun showSetBudgetDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Set Monthly Budget")
+
+        val input = EditText(this)
+        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+        input.hint = "Enter budget amount"
+        builder.setView(input)
+
+        builder.setPositiveButton("set") {_, _ ->
+            val budgetInput = input.text.toString().toDoubleOrNull()
+            if(budgetInput != null) {
+                if(budgetInput > totalAmount) {
+                    Toast.makeText(this, "Budget can't exceed total balance!", Toast.LENGTH_SHORT).show()
+                } else {
+                    monthlyBudget = budgetInput
+                    totalSpent = 0.0
+                    // update the budget progress
+                    updateBudgetProgress()
+                    Toast.makeText(this, "Budget set: $monthlyBudget", Toast.LENGTH_SHORT).show()
+                }
+
+            } else {
+                Toast.makeText(this, "Invalid input", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        builder.setNegativeButton("cancel", null)
+        builder.show()
+    }
+
+    // update budget progress
+    private fun updateBudgetProgress() {
+        if(monthlyBudget > 0) {
+            val progress = ((totalSpent / monthlyBudget) * 100).toInt()
+            progressBudget.progress = progress.coerceAtMost(100)
+            tvBudgetStatus.text = "Spent: ${String.format("%.2f", totalSpent)} / ${String.format("%.2f", monthlyBudget)}"
+
+            if(progress >= 90) {
+                sendBudgetWarningNotification()
+            }
+
+        } else {
+            progressBudget.progress = 0
+            tvBudgetStatus.text = "Not Set"
+
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name ="Budget Warning"
+            val descriptionText = "Notifications for budget warnings"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+
+            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    // set budget warnings
+    private fun sendBudgetWarningNotification() {
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("Budget Alert")
+            .setContentText("You have used over 90% of your monthly budget!")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(1, builder.build())
     }
 
 }

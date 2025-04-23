@@ -72,6 +72,7 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
@@ -112,8 +113,8 @@
                                 android:layout_marginBottom="56dp"
                                 android:background="@drawable/custom_edittext"
                                 android:ems="10"
-                                android:inputType="numberDecimal"
                                 android:hint="Amount: "
+                                android:inputType="numberDecimal"
                                 android:paddingStart="15dp"
                                 android:textColor="@color/black"
                                 android:textSize="20sp"
