@@ -188,6 +188,25 @@ class TransactionActivity : AppCompatActivity() {
 
 //    write to file function
     private fun writeToFile(filename: String, value: Double) {
+        try {
+            openFileOutput(filename, MODE_PRIVATE).use {
+                it.write(value.toString().toByteArray())
+            }
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
+//    save the withdrawals
+    private fun saveWithdrawal(category: String, amount: Double) {
 
     }
+
+
+//    show alert function
+    private fun showAlert(title: String, message: String) {
+
+    }
+
 }
