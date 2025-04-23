@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.widget.EditText
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -24,6 +25,17 @@ class TransactionActivity : AppCompatActivity() {
 
     private lateinit var buttonDeposit : TextView
     private lateinit var depositAmount : EditText
+
+    private lateinit var etWithdrawAmount: EditText
+    private lateinit var spinnerCategory: Spinner
+    private lateinit var btnWithdraw: EditText
+
+    private var totalBalance: Double = 0.0
+    private var monthlyBudget: Double = 0.0
+
+    private val budgetFile = "monthly_budget.txt"
+    private val balanceFile = "balance.txt"
+    private val withdrawalFile = "withdrawals.txt"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

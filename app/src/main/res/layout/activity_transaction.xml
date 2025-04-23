@@ -153,7 +153,7 @@
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="230dp"
                     android:layout_margin="20dp"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="5dp"
@@ -178,10 +178,10 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintVertical_bias="0.139" />
+                            app:layout_constraintVertical_bias="0.096" />
 
                         <EditText
-                            android:id="@+id/editTextText"
+                            android:id="@+id/etWithdrawAmount"
                             android:layout_width="311dp"
                             android:layout_height="53dp"
                             android:background="@drawable/custom_edittext"
@@ -195,10 +195,21 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintVertical_bias="0.571" />
+                            app:layout_constraintVertical_bias="0.35" />
+
+                        <Spinner
+                            android:id="@+id/spinnerCategory"
+                            android:layout_width="308dp"
+                            android:layout_height="39dp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.476"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintVertical_bias="0.643" />
 
                         <TextView
-                            android:id="@+id/textView12"
+                            android:id="@+id/btnWithdraw"
                             android:layout_width="106dp"
                             android:layout_height="40dp"
                             android:background="@drawable/custom_edittext"
@@ -211,7 +222,7 @@
                             app:layout_constraintHorizontal_bias="0.498"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintVertical_bias="0.9" />
+                            app:layout_constraintVertical_bias="0.915" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </androidx.cardview.widget.CardView>
             </androidx.constraintlayout.widget.ConstraintLayout>
