@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
@@ -37,6 +38,8 @@ class TransactionActivity : AppCompatActivity() {
     private val balanceFile = "balance.txt"
     private val withdrawalFile = "withdrawals.txt"
 
+    private val categories = arrayOf("Food",  "Health", "Bills", "Transport", "Entertainment", "Other")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -50,15 +53,67 @@ class TransactionActivity : AppCompatActivity() {
         buttonDeposit = findViewById(R.id.btnDeposit)
         depositAmount = findViewById(R.id.etDepositMoney)
 
+        etWithdrawAmount = findViewById(R.id.etWithdrawAmount)
+        spinnerCategory = findViewById(R.id.spinnerCategory)
+        btnWithdraw = findViewById(R.id.btnWithdraw)
+
+        // balance and the budget
+        totalBalance = readFromFile(balanceFile)
+        monthlyBudget = readFromFile(budgetFile)
+
+        // setup spinner
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategory.adapter = adapter
+
         buttonDeposit.setOnClickListener {
             val amount = depositAmount.text.toString().trim()
             if(amount.isNotEmpty()) {
-//                save deposit amount
                 saveDeposit(amount.toDouble())
 
             } else {
                 Toast.makeText(this, "Please enter an amount", Toast.LENGTH_SHORT).show()
             }
+        }
+
+//        withdraw button initiation
+        btnWithdraw.setOnClickListener {
+            val amountStr = etWithdrawAmount.text.toString().trim()
+            val category = spinnerCategory.selectedItem.toString()
+
+            if(amountStr.isEmpty()) {
+                Toast.makeText(this, "Enter withdrawal amount", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            val amount = amountStr.toDoubleOrNull()
+            if(amount == null || amount <= 0) {
+                Toast.makeText(this, "Invalid withdrawal amount", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if(amount > totalBalance) {
+                Toast.makeText(this, "Insufficient balance", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if(amount > monthlyBudget) {
+                showAlert("Warning", "Withdrawal exceeds your monthly budget.")
+
+            } else if(amount > (monthlyBudget * 0.9)) {
+                showAlert("Caution", "You're about to reach your monthly budget limit.")
+            }
+
+            monthlyBudget -= amount
+            totalBalance -= amount
+            writeToFile(balanceFile, totalBalance)
+            writeToFile(budgetFile, monthlyBudget)
+
+            // Save withdrawal record
+            saveWithdrawal(category, amount)
+
+            Toast.makeText(this, "Withdrew Rs. $amount from $category", Toast.LENGTH_LONG).show()
+            etWithdrawAmount.text.clear()
         }
 
 //        create notification channel
@@ -113,5 +168,26 @@ class TransactionActivity : AppCompatActivity() {
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(notificationId, builder.build())
+    }
+
+    //read files
+    private fun readFromFile(filename: String): Double {
+        return try {
+            val file = File(filesDir, filename)
+            if(file.exists()) {
+                file.readText().toDoubleOrNull() ?: 0.0
+
+            } else {
+                0.0
+            }
+
+        } catch (e: IOException) {
+            0.0
+        }
+    }
+
+//    write to file function
+    private fun writeToFile(filename: String, value: Double) {
+
     }
 }
