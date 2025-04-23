@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -21,7 +22,24 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var buttonNavDeposit : Button
     private lateinit var tvTotalAmount: TextView
 
+//    monthly budget
+    private lateinit var tvBudgetStatus: TextView
+    private lateinit var btnSetBudget: TextView
+    private lateinit var progressBudget: ProgressBar
+
     private var totalAmount: Double = 0.00
+    private var monthlyBudget: Double = 0.0
+    private var totalSpent: Double = 0.0
+
+    private val CHANNEL_ID = "budget_warning"
+
+
+    // on resume
+    override fun onResume() {
+        super.onResume()
+        loadTotalAmount()
+        updateTotalAmountTextView()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +50,10 @@ class HomeActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        btnSetBudget = findViewById(R.id.btnSetBudget)
+        progressBudget = findViewById(R.id.progressBudget)
+        tvBudgetStatus = findViewById(R.id.tvBudgetStatus)
 
         buttonNavDeposit = findViewById(R.id.btnNavDeposit)
         tvTotalAmount = findViewById(R.id.tvTotalAmt)
@@ -87,7 +109,7 @@ class HomeActivity : AppCompatActivity() {
                     }
                 }
             }
-            val withdrawFile = File(filesDir, "withdrawws.txt")
+            val withdrawFile = File(filesDir, "withdrawals.txt")
             if(withdrawFile.exists()) {
                 withdrawFile.forEachLine { line ->
                     val parts = line.split(",")

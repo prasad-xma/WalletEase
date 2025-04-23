@@ -56,7 +56,7 @@ class TransactionActivity : AppCompatActivity() {
 
     private fun saveDeposit(amount: Double) {
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-        val depositRecord = "$amount\n$timestamp\n"
+        val depositRecord = "$amount,$timestamp\n"
 
         try {
             val file = File(filesDir, "deposits.txt")
@@ -90,7 +90,7 @@ class TransactionActivity : AppCompatActivity() {
 
     private fun sendDepositNotification(amount: Double) {
         val channelId = "deposit_channel"
-        val notificationId = 1
+        val notificationId = System.currentTimeMillis().toInt()
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.notification)
