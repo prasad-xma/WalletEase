@@ -27,12 +27,10 @@ import java.util.Locale
 
 class TransactionActivity : AppCompatActivity() {
 
-    // bottom navigation
     private lateinit var bottomNavHome: LinearLayout
     private lateinit var bottomNavAction: LinearLayout
     private lateinit var bottomNavHistory: LinearLayout
 
-    // nav home test button
     private lateinit var btnNavHome: Button
 
     private lateinit var buttonDeposit: TextView
@@ -43,12 +41,14 @@ class TransactionActivity : AppCompatActivity() {
     private lateinit var btnWithdraw: TextView
 
     private var monthlyBudget: Double = 0.0
-    private var totalSpent: Double = 0.0 // To track spent amount in the current budget cycle
+    private var totalSpent: Double = 0.0
 
     private val budgetFile = "monthly_budget.txt"
     private val depositFile = "deposits.txt"
     private val withdrawalFile = "withdrawals.txt"
-    private val totalSpentFile = "total_spent.txt" // File to store total spent
+    private val totalSpentFile = "total_spent.txt"
+    private val LOW_BALANCE_THRESHOLD_PERCENTAGE = 0.10
+    private val LOW_BALANCE_CHANNEL_ID = "low_balance"
 
     private val categories = arrayOf("Food", "Health", "Bills", "Transport", "Entertainment", "Other")
 
@@ -62,12 +62,6 @@ class TransactionActivity : AppCompatActivity() {
             insets
         }
 
-        btnNavHome = findViewById(R.id.btnNavHome)
-        btnNavHome.setOnClickListener {
-            startActivity(Intent(this, HomeActivity::class.java))
-            finish()
-        }
-
         buttonDeposit = findViewById(R.id.btnDeposit)
         depositAmount = findViewById(R.id.etDepositMoney)
 
@@ -75,11 +69,9 @@ class TransactionActivity : AppCompatActivity() {
         spinnerCategory = findViewById(R.id.spinnerCategory)
         btnWithdraw = findViewById(R.id.btnWithdraw)
 
-        // Load the budget and total spent
         monthlyBudget = readFromFile(budgetFile)
         totalSpent = readFromFile(totalSpentFile)
 
-        // setup spinner
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCategory.adapter = adapter
@@ -88,13 +80,12 @@ class TransactionActivity : AppCompatActivity() {
             val amount = depositAmount.text.toString().trim()
             if (amount.isNotEmpty()) {
                 saveDeposit(amount.toDouble())
-
+                checkAndSendLowBalanceNotification()
             } else {
                 Toast.makeText(this, "Please enter an amount", Toast.LENGTH_SHORT).show()
             }
         }
 
-//        withdraw button initiation
         btnWithdraw.setOnClickListener {
             val amountStr = etWithdrawAmount.text.toString().trim()
             val category = spinnerCategory.selectedItem.toString()
@@ -118,7 +109,6 @@ class TransactionActivity : AppCompatActivity() {
 
             if (amount > (monthlyBudget - totalSpent)) {
                 showAlert("Warning", "Withdrawal exceeds your remaining monthly budget.")
-
             } else if (amount > ((monthlyBudget - totalSpent) * 0.9)) {
                 showAlert("Caution", "You're about to reach your monthly budget limit.")
             }
@@ -126,18 +116,15 @@ class TransactionActivity : AppCompatActivity() {
             totalSpent += amount
             writeToFile(totalSpentFile, totalSpent)
 
-            // Save withdrawal record
             saveWithdrawal(category, amount)
+            checkAndSendLowBalanceNotification()
 
             Toast.makeText(this, "Withdrew Rs. $amount from $category", Toast.LENGTH_LONG).show()
             etWithdrawAmount.text.clear()
-            finish()
         }
 
-//        create notification channel
         createNotificationChannel()
 
-        // bottom navigation
         bottomNavHome = findViewById(R.id.bottomNavHome)
         bottomNavHome.setOnClickListener {
             startActivity(Intent(this, HomeActivity::class.java))
@@ -150,12 +137,10 @@ class TransactionActivity : AppCompatActivity() {
         bottomNavHistory.setOnClickListener {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
-
     }
 
     private fun getCurrentBalance(): Double {
         var totalAmount = 0.00
-
         try {
             val depositFile = File(filesDir, "deposits.txt")
             if (depositFile.exists()) {
@@ -170,11 +155,10 @@ class TransactionActivity : AppCompatActivity() {
             if (withdrawFile.exists()) {
                 withdrawFile.forEachLine {
                     val parts = it.split(",")
-                    val amount = parts[1].toDoubleOrNull() ?: 0.0 // Assuming amount is the second part
+                    val amount = parts[1].toDoubleOrNull() ?: 0.0
                     totalAmount -= amount
                 }
             }
-
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -184,17 +168,14 @@ class TransactionActivity : AppCompatActivity() {
     private fun saveDeposit(amount: Double) {
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         val depositRecord = "$amount,$timestamp\n"
-
         try {
             val file = File(filesDir, depositFile)
             FileOutputStream(file, true).use {
                 it.write(depositRecord.toByteArray())
             }
             Toast.makeText(this, "Deposit saved", Toast.LENGTH_LONG).show()
-            // send notification
             sendDepositNotification(amount)
             finish()
-
         } catch (e: IOException) {
             Toast.makeText(this, "Error saving deposit", Toast.LENGTH_SHORT).show()
             e.printStackTrace()
@@ -210,73 +191,69 @@ class TransactionActivity : AppCompatActivity() {
             val channel = NotificationChannel(channelId, name, importance).apply {
                 description = descriptionText
             }
-            val notificationManager: NotificationManager =
+            val lowBalanceChannel = NotificationChannel(
+                LOW_BALANCE_CHANNEL_ID,
+                "Low Balance Alert",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications when the total balance is low"
+            }
+            val notificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(lowBalanceChannel)
         }
     }
 
     private fun sendDepositNotification(amount: Double) {
         val channelId = "deposit_channel"
         val notificationId = System.currentTimeMillis().toInt()
-
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.notification)
             .setContentTitle("Deposit Successful")
             .setContentText("Amount: $amount deposited successfully")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(notificationId, builder.build())
     }
 
-    //read files
     private fun readFromFile(filename: String): Double {
         return try {
             val file = File(filesDir, filename)
             if (file.exists()) {
                 file.readText().toDoubleOrNull() ?: 0.0
-
             } else {
                 0.0
             }
-
         } catch (e: IOException) {
             0.0
         }
     }
 
-    //    write to file function
     private fun writeToFile(filename: String, value: Double) {
         try {
             openFileOutput(filename, MODE_PRIVATE).use {
                 it.write(value.toString().toByteArray())
             }
-
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
-    //    save the withdrawals
     private fun saveWithdrawal(category: String, amount: Double) {
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         val withdrawalRecord = "$category,$amount,$timestamp\n"
-
         try {
             val file = File(filesDir, withdrawalFile)
             FileOutputStream(file, true).use {
                 it.write(withdrawalRecord.toByteArray())
             }
-
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
-
-    //    show alert function
     private fun showAlert(title: String, message: String) {
         android.app.AlertDialog.Builder(this)
             .setTitle(title)
@@ -285,4 +262,41 @@ class TransactionActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun getTotalInitialAmount(): Double {
+        var initialAmount = 0.0
+        try {
+            val depositFile = File(filesDir, "deposits.txt")
+            if (depositFile.exists()) {
+                depositFile.forEachLine { line ->
+                    val parts = line.split(",")
+                    if (parts.isNotEmpty()) {
+                        initialAmount += parts[0].toDoubleOrNull() ?: 0.00
+                    }
+                }
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return initialAmount
+    }
+
+    private fun checkAndSendLowBalanceNotification() {
+        val currentBalance = getCurrentBalance()
+        if (currentBalance > 0 && currentBalance <= (getTotalInitialAmount() * LOW_BALANCE_THRESHOLD_PERCENTAGE)) {
+            sendLowBalanceNotification()
+        }
+    }
+
+    private fun sendLowBalanceNotification() {
+        val builder = NotificationCompat.Builder(this, LOW_BALANCE_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_notification_clear_all)
+            .setContentTitle("Low Balance Alert!")
+            .setContentText("Your total balance is getting low. Please consider adding funds.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(2, builder.build())
+    }
 }

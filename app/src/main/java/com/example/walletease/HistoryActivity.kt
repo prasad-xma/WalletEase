@@ -16,7 +16,16 @@ import com.github.mikephil.charting.data.PieEntry
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.utils.ColorTemplate
+
+
 class HistoryActivity : AppCompatActivity() {
+
 
     // bottom navigation
     private lateinit var bottomNavHome: LinearLayout
@@ -24,6 +33,8 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var bottomNavHistory: LinearLayout
 
     private lateinit var pieChart: PieChart
+    // barChart
+    private lateinit var barChart: BarChart
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,10 +62,12 @@ class HistoryActivity : AppCompatActivity() {
 
         // Pie Chart
         pieChart = findViewById(R.id.pieChart1)
+        // bar chart
+        barChart = findViewById(R.id.barChart1)
 
         val spendingByCategory = readWithdrawalsAndGroupByCategory()
         setupPieChart(spendingByCategory)
-
+        setupBarChart(spendingByCategory)
     }
 
     private fun readWithdrawalsAndGroupByCategory(): Map<String, Float> {
@@ -107,4 +120,36 @@ class HistoryActivity : AppCompatActivity() {
         pieChart.animateY(1000)
         pieChart.invalidate()
     }
+
+    // setup bar chart
+    private fun setupBarChart(categoryData: Map<String, Float>) {
+        val entries = ArrayList<BarEntry>()
+        val labels = ArrayList<String>()
+        var index = 0f
+
+        categoryData.forEach { (category, total) ->
+            entries.add(BarEntry(index, total))
+            labels.add(category)
+            index++
+        }
+
+        val dataSet = BarDataSet(entries, "Spending by Category")
+        dataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
+        dataSet.valueTextSize = 14f
+
+        val barData = BarData(dataSet)
+        barChart.data = barData
+
+        barChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        barChart.xAxis.granularity = 1f
+        barChart.xAxis.setDrawGridLines(false)
+        barChart.xAxis.labelRotationAngle = -45f
+        barChart.axisLeft.axisMinimum = 0f
+        barChart.axisRight.isEnabled = false
+
+        barChart.description.isEnabled = false
+        barChart.animateY(1000)
+        barChart.invalidate()
+    }
+
 }

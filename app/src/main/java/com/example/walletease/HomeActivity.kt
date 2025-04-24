@@ -2,12 +2,10 @@ package com.example.walletease
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-// import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-// import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -20,10 +18,21 @@ import androidx.cardview.widget.CardView
 import androidx.core.app.NotificationCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.utils.ColorTemplate
+import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
+import java.io.InputStreamReader
 
 class HomeActivity : AppCompatActivity() {
+
+    // barChart
+    private lateinit var barChart: BarChart
 
     // bottom navigation
     private lateinit var bottomNavHome: LinearLayout
@@ -47,12 +56,16 @@ class HomeActivity : AppCompatActivity() {
     private var monthlyBudget: Double = 0.0
     private var totalSpent: Double = 0.0
 
-    private val CHANNEL_ID = "budget_warning"
+    private val BUDGET_WARNING_CHANNEL_ID = "budget_warning"
+    private val LOW_BALANCE_CHANNEL_ID = "low_balance"
     private val BUDGET_FILE = "monthly_budget.txt"
     private val TOTAL_SPENT_FILE = "total_spent.txt"
     private val DEPOSIT_FILE = "deposits.txt"
     private val WITHDRAWAL_FILE = "withdrawals.txt"
 
+    // Constants for notification thresholds (you can adjust these)
+    private val LOW_BALANCE_THRESHOLD_PERCENTAGE = 0.10 // Notify when 10% or less of total remains
+    private val BUDGET_NEAR_LIMIT_PERCENTAGE = 0.90   // Notify when 90% or more of budget is used
 
     // on resume
     override fun onResume() {
@@ -62,6 +75,7 @@ class HomeActivity : AppCompatActivity() {
         loadTotalSpent()
         updateTotalAmountTextView()
         updateBudgetProgress()
+        checkLowBalance() // Check for low balance on resume
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,6 +87,8 @@ class HomeActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        // bar chart
+        barChart = findViewById(R.id.barChart2)
 
         btnSetBudget = findViewById(R.id.btnSetBudget)
         progressBudget = findViewById(R.id.progressBudget)
@@ -92,6 +108,7 @@ class HomeActivity : AppCompatActivity() {
         loadTotalSpent()
         updateTotalAmountTextView()
         updateBudgetProgress()
+        checkLowBalance() // Check for low balance on create
 
         btnLogout.setOnClickListener {
             logoutUser()
@@ -112,7 +129,7 @@ class HomeActivity : AppCompatActivity() {
             showSetBudgetDialog()
         }
 
-        createNotificationChannel()
+        createNotificationChannels() // Create both notification channels
 
         // bottom navigation
         bottomNavHome = findViewById(R.id.bottomNavHome)
@@ -128,7 +145,62 @@ class HomeActivity : AppCompatActivity() {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
 
+        val spendingByCategory = readWithdrawalsAndGroupByCategory()
+        setupBarChart(spendingByCategory)
     }
+
+    private fun readWithdrawalsAndGroupByCategory(): Map<String, Float> {
+        val categoryTotals = mutableMapOf<String, Float>()
+
+        try {
+            val reader = BufferedReader(InputStreamReader(openFileInput("withdrawals.txt")))
+            reader.forEachLine { line ->
+                val parts = line.split(",")
+                if (parts.size >= 2) {
+                    val category = parts[0]
+                    val amount = parts[1].toFloatOrNull() ?: 0f
+                    categoryTotals[category] = categoryTotals.getOrDefault(category, 0f) + amount
+                }
+            }
+            reader.close()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return categoryTotals
+    }
+
+    // setup bar chart
+    private fun setupBarChart(categoryData: Map<String, Float>) {
+        val entries = ArrayList<BarEntry>()
+        val labels = ArrayList<String>()
+        var index = 0f
+
+        categoryData.forEach { (category, total) ->
+            entries.add(BarEntry(index, total))
+            labels.add(category)
+            index++
+        }
+
+        val dataSet = BarDataSet(entries, "Spending by Category")
+        dataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
+        dataSet.valueTextSize = 14f
+
+        val barData = BarData(dataSet)
+        barChart.data = barData
+
+        barChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        barChart.xAxis.granularity = 1f
+        barChart.xAxis.setDrawGridLines(false)
+        barChart.xAxis.labelRotationAngle = -45f
+        barChart.axisLeft.axisMinimum = 0f
+        barChart.axisRight.isEnabled = false
+
+        barChart.description.isEnabled = false
+        barChart.animateY(1000)
+        barChart.invalidate()
+    }
+
 
     private fun displayWelcomeMessage() {
         val uName = sharedPreferences.getString("name", "User")
@@ -224,36 +296,88 @@ class HomeActivity : AppCompatActivity() {
             tvBudgetStatus.text =
                 "${String.format("%.2f", totalSpent)} / ${String.format("%.2f", monthlyBudget)}"
 
-            if (progress >= 90) {
+            if (progress >= BUDGET_NEAR_LIMIT_PERCENTAGE * 100) {
                 sendBudgetWarningNotification()
             }
 
         } else {
             progressBudget.progress = 0
             tvBudgetStatus.text = "Not Set"
-
         }
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel =
-                NotificationChannel(CHANNEL_ID, "Budget Warning", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                    description = "Notifications for budget warnings"
-                }
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+            // Budget Warning Channel
+            val budgetWarningChannel = NotificationChannel(
+                BUDGET_WARNING_CHANNEL_ID,
+                "Budget Warning",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Notifications for budget warnings"
+            }
+
+            // Low Balance Channel
+            val lowBalanceChannel = NotificationChannel(
+                LOW_BALANCE_CHANNEL_ID,
+                "Low Balance Alert",
+                NotificationManager.IMPORTANCE_HIGH // Higher importance for low balance
+            ).apply {
+                description = "Notifications when the total balance is low"
+            }
+
+            val notificationManager: NotificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(budgetWarningChannel)
+            notificationManager.createNotificationChannel(lowBalanceChannel)
         }
     }
 
     // set budget warnings
     private fun sendBudgetWarningNotification() {
-        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, BUDGET_WARNING_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("Budget Alert")
-            .setContentText("You have used over 90% of your monthly budget!")
+            .setContentText("You have used over ${BUDGET_NEAR_LIMIT_PERCENTAGE * 100}% of your monthly budget!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         getSystemService(NotificationManager::class.java).notify(1, builder.build())
+    }
+
+    // Check and send low balance notification
+    private fun checkLowBalance() {
+        if (totalAmount > 0 && totalAmount <= (getTotalInitialAmount() * LOW_BALANCE_THRESHOLD_PERCENTAGE)) {
+            sendLowBalanceNotification()
+        }
+    }
+
+    private fun getTotalInitialAmount(): Double {
+        var initialAmount = 0.0
+        try {
+            val depositFile = File(filesDir, DEPOSIT_FILE)
+            if (depositFile.exists()) {
+                depositFile.forEachLine { line ->
+                    val parts = line.split(",")
+                    if (parts.isNotEmpty()) {
+                        initialAmount += parts[0].toDoubleOrNull() ?: 0.00
+                    }
+                }
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return initialAmount
+    }
+
+
+    private fun sendLowBalanceNotification() {
+        val builder = NotificationCompat.Builder(this, LOW_BALANCE_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_notification_clear_all) // Use a different icon
+            .setContentTitle("Low Balance Alert!")
+            .setContentText("Your total balance is getting low. Please consider adding funds.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // High priority to show immediately
+            .setAutoCancel(true) // Dismiss the notification after it's clicked
+
+        getSystemService(NotificationManager::class.java).notify(2, builder.build()) // Use a different notification ID
     }
 
     private fun saveMonthlyBudget() {
