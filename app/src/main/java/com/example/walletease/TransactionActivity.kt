@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -25,6 +26,11 @@ import java.util.Date
 import java.util.Locale
 
 class TransactionActivity : AppCompatActivity() {
+
+    // bottom navigation
+    private lateinit var bottomNavHome: LinearLayout
+    private lateinit var bottomNavAction: LinearLayout
+    private lateinit var bottomNavHistory: LinearLayout
 
     // nav home test button
     private lateinit var btnNavHome: Button
@@ -130,6 +136,20 @@ class TransactionActivity : AppCompatActivity() {
 
 //        create notification channel
         createNotificationChannel()
+
+        // bottom navigation
+        bottomNavHome = findViewById(R.id.bottomNavHome)
+        bottomNavHome.setOnClickListener {
+            startActivity(Intent(this, HomeActivity::class.java))
+        }
+        bottomNavAction = findViewById(R.id.bottomNavAction)
+        bottomNavAction.setOnClickListener {
+            startActivity(Intent(this, TransactionActivity::class.java))
+        }
+        bottomNavHistory = findViewById(R.id.bottomNavHistory)
+        bottomNavHistory.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
 
     }
 

@@ -25,7 +25,7 @@
     <string name="crd_no">222 2555 5444 0000</string>
     <string name="tvAmtTxt">Total amount:</string>
 
-<!--    Transaction Page-->
+    <!--    Transaction Page-->
     <string name="tvTransactionHeader">Transactions</string>
     <string name="headerbg">headerBg</string>
 </resources>

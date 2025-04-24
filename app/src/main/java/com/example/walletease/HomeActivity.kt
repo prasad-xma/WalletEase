@@ -2,19 +2,21 @@ package com.example.walletease
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
+// import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.widget.Button
+// import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.core.app.NotificationCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -23,11 +25,17 @@ import java.io.IOException
 
 class HomeActivity : AppCompatActivity() {
 
+    // bottom navigation
+    private lateinit var bottomNavHome: LinearLayout
+    private lateinit var bottomNavAction: LinearLayout
+    private lateinit var bottomNavHistory: LinearLayout
+
     private lateinit var tvWelcome: TextView
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var btnLogout: TextView
     private lateinit var holderName: TextView
-    private lateinit var buttonNavDeposit: Button
+    private lateinit var buttonNavDeposit: CardView
+    private lateinit var buttonNavWithdraw: CardView
     private lateinit var tvTotalAmount: TextView
 
     //    monthly budget
@@ -70,6 +78,7 @@ class HomeActivity : AppCompatActivity() {
         progressBudget = findViewById(R.id.progressBudget)
         tvBudgetStatus = findViewById(R.id.tvBudgetStatus)
 
+        buttonNavWithdraw = findViewById(R.id.btnNavWithdraw)
         buttonNavDeposit = findViewById(R.id.btnNavDeposit)
         tvTotalAmount = findViewById(R.id.tvTotalAmt)
         holderName = findViewById(R.id.tvHolderName)
@@ -92,6 +101,10 @@ class HomeActivity : AppCompatActivity() {
         buttonNavDeposit.setOnClickListener {
             startActivity(Intent(this, TransactionActivity::class.java))
         }
+        // navigate to the withdraw
+        buttonNavWithdraw.setOnClickListener {
+            startActivity(Intent(this, TransactionActivity::class.java))
+        }
 
         // tvTotalAmount.text = String.format("%.2f", totalAmount)
 
@@ -100,6 +113,21 @@ class HomeActivity : AppCompatActivity() {
         }
 
         createNotificationChannel()
+
+        // bottom navigation
+        bottomNavHome = findViewById(R.id.bottomNavHome)
+        bottomNavHome.setOnClickListener {
+            startActivity(Intent(this, HomeActivity::class.java))
+        }
+        bottomNavAction = findViewById(R.id.bottomNavAction)
+        bottomNavAction.setOnClickListener {
+            startActivity(Intent(this, TransactionActivity::class.java))
+        }
+        bottomNavHistory = findViewById(R.id.bottomNavHistory)
+        bottomNavHistory.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
+
     }
 
     private fun displayWelcomeMessage() {
