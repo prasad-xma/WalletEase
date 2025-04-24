@@ -28,4 +28,6 @@
     <!--    Transaction Page-->
     <string name="tvTransactionHeader">Transactions</string>
     <string name="headerbg">headerBg</string>
+    <string name="history">History</string>
+    <string name="scrollview">ScrollView</string>
 </resources>

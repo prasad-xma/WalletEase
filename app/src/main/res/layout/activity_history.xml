@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".HistoryActivity">
 
+<!--    header section-->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/consHeader"
         android:layout_width="match_parent"
@@ -22,7 +23,7 @@
             android:layout_height="61dp"
             android:fontFamily="@font/aclonica"
             android:gravity="center"
-            android:text="History"
+            android:text="@string/history"
             android:textColor="@color/white"
             android:textSize="34sp"
             android:textStyle="bold"
@@ -32,6 +33,7 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+<!--    body section-->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -40,9 +42,42 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/consHeader">
 
+        <ScrollView
+            android:contentDescription="@string/scrollview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="280dp">
+
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/pieChart1"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </LinearLayout>
+        </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+<!--    bottom navigation bar-->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/consFooter"
         android:layout_width="match_parent"
