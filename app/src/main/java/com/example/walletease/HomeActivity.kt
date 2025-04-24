@@ -64,8 +64,8 @@ class HomeActivity : AppCompatActivity() {
     private val WITHDRAWAL_FILE = "withdrawals.txt"
 
     // Constants for notification thresholds (you can adjust these)
-    private val LOW_BALANCE_THRESHOLD_PERCENTAGE = 0.10 // Notify when 10% or less of total remains
-    private val BUDGET_NEAR_LIMIT_PERCENTAGE = 0.90   // Notify when 90% or more of budget is used
+    private val LOW_BALANCE_THRESHOLD_PERCENTAGE = 0.10
+    private val BUDGET_NEAR_LIMIT_PERCENTAGE = 0.90
 
     // on resume
     override fun onResume() {
@@ -75,7 +75,7 @@ class HomeActivity : AppCompatActivity() {
         loadTotalSpent()
         updateTotalAmountTextView()
         updateBudgetProgress()
-        checkLowBalance() // Check for low balance on resume
+        checkLowBalance()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,7 +108,7 @@ class HomeActivity : AppCompatActivity() {
         loadTotalSpent()
         updateTotalAmountTextView()
         updateBudgetProgress()
-        checkLowBalance() // Check for low balance on create
+        checkLowBalance()
 
         btnLogout.setOnClickListener {
             logoutUser()
@@ -129,7 +129,7 @@ class HomeActivity : AppCompatActivity() {
             showSetBudgetDialog()
         }
 
-        createNotificationChannels() // Create both notification channels
+        createNotificationChannels()
 
         // bottom navigation
         bottomNavHome = findViewById(R.id.bottomNavHome)
@@ -321,7 +321,7 @@ class HomeActivity : AppCompatActivity() {
             val lowBalanceChannel = NotificationChannel(
                 LOW_BALANCE_CHANNEL_ID,
                 "Low Balance Alert",
-                NotificationManager.IMPORTANCE_HIGH // Higher importance for low balance
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Notifications when the total balance is low"
             }
@@ -371,13 +371,13 @@ class HomeActivity : AppCompatActivity() {
 
     private fun sendLowBalanceNotification() {
         val builder = NotificationCompat.Builder(this, LOW_BALANCE_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_notification_clear_all) // Use a different icon
+            .setSmallIcon(android.R.drawable.ic_notification_clear_all)
             .setContentTitle("Low Balance Alert!")
             .setContentText("Your total balance is getting low. Please consider adding funds.")
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // High priority to show immediately
-            .setAutoCancel(true) // Dismiss the notification after it's clicked
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
 
-        getSystemService(NotificationManager::class.java).notify(2, builder.build()) // Use a different notification ID
+        getSystemService(NotificationManager::class.java).notify(2, builder.build())
     }
 
     private fun saveMonthlyBudget() {
