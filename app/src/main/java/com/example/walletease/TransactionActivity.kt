@@ -3,9 +3,11 @@ package com.example.walletease
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
@@ -24,18 +26,20 @@ import java.util.Locale
 
 class TransactionActivity : AppCompatActivity() {
 
+    // nav home test button
+    private lateinit var btnNavHome: Button
+
     private lateinit var buttonDeposit : TextView
     private lateinit var depositAmount : EditText
 
     private lateinit var etWithdrawAmount: EditText
     private lateinit var spinnerCategory: Spinner
-    private lateinit var btnWithdraw: EditText
+    private lateinit var btnWithdraw: TextView
 
-    private var totalBalance: Double = 0.0
     private var monthlyBudget: Double = 0.0
 
     private val budgetFile = "monthly_budget.txt"
-    private val balanceFile = "balance.txt"
+    private val depositFile = "deposits.txt"
     private val withdrawalFile = "withdrawals.txt"
 
     private val categories = arrayOf("Food",  "Health", "Bills", "Transport", "Entertainment", "Other")
@@ -50,6 +54,11 @@ class TransactionActivity : AppCompatActivity() {
             insets
         }
 
+        btnNavHome = findViewById(R.id.btnNavHome)
+        btnNavHome.setOnClickListener {
+            startActivity(Intent(this, HomeActivity::class.java))
+        }
+
         buttonDeposit = findViewById(R.id.btnDeposit)
         depositAmount = findViewById(R.id.etDepositMoney)
 
@@ -57,8 +66,7 @@ class TransactionActivity : AppCompatActivity() {
         spinnerCategory = findViewById(R.id.spinnerCategory)
         btnWithdraw = findViewById(R.id.btnWithdraw)
 
-        // balance and the budget
-        totalBalance = readFromFile(balanceFile)
+        // Load the budget
         monthlyBudget = readFromFile(budgetFile)
 
         // setup spinner
@@ -92,7 +100,8 @@ class TransactionActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if(amount > totalBalance) {
+            val currentBalance = getCurrentBalance()
+            if(amount > currentBalance) {
                 Toast.makeText(this, "Insufficient balance", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -105,8 +114,6 @@ class TransactionActivity : AppCompatActivity() {
             }
 
             monthlyBudget -= amount
-            totalBalance -= amount
-            writeToFile(balanceFile, totalBalance)
             writeToFile(budgetFile, monthlyBudget)
 
             // Save withdrawal record
@@ -121,12 +128,40 @@ class TransactionActivity : AppCompatActivity() {
 
     }
 
+    private fun getCurrentBalance(): Double {
+        var totalAmount = 0.00
+
+        try {
+            val depositFile = File(filesDir, "deposits.txt")
+            if(depositFile.exists()){
+                depositFile.forEachLine { line ->
+                    val parts = line.split(",")
+                    if(parts.isNotEmpty()) {
+                        totalAmount += parts[0].toDoubleOrNull() ?: 0.00
+                    }
+                }
+            }
+            val withdrawFile = File(filesDir, "withdrawals.txt")
+            if(withdrawFile.exists()) {
+                withdrawFile.forEachLine {
+                    val parts = it.split(",")
+                    val amount = parts[1].toDoubleOrNull() ?: 0.0 // Assuming amount is the second part
+                    totalAmount -= amount
+                }
+            }
+
+        } catch (e: IOException){
+            e.printStackTrace()
+        }
+        return totalAmount
+    }
+
     private fun saveDeposit(amount: Double) {
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         val depositRecord = "$amount,$timestamp\n"
 
         try {
-            val file = File(filesDir, "deposits.txt")
+            val file = File(filesDir, depositFile)
             FileOutputStream(file, true).use {
                 it.write(depositRecord.toByteArray())
             }
@@ -186,7 +221,7 @@ class TransactionActivity : AppCompatActivity() {
         }
     }
 
-//    write to file function
+    //    write to file function
     private fun writeToFile(filename: String, value: Double) {
         try {
             openFileOutput(filename, MODE_PRIVATE).use {
@@ -198,15 +233,30 @@ class TransactionActivity : AppCompatActivity() {
         }
     }
 
-//    save the withdrawals
+    //    save the withdrawals
     private fun saveWithdrawal(category: String, amount: Double) {
+        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        val withdrawalRecord = "$category,$amount,$timestamp\n"
 
+        try {
+            val file = File(filesDir, withdrawalFile)
+            FileOutputStream(file, true).use {
+                it.write(withdrawalRecord.toByteArray())
+            }
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
     }
 
 
-//    show alert function
+    //    show alert function
     private fun showAlert(title: String, message: String) {
-
+        android.app.AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Ok", null)
+            .show()
     }
 
 }
