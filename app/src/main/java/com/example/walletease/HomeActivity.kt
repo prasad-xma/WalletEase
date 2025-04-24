@@ -23,14 +23,14 @@ import java.io.IOException
 
 class HomeActivity : AppCompatActivity() {
 
-    private lateinit var tvWelcome : TextView
-    private lateinit var sharedPreferences :SharedPreferences
+    private lateinit var tvWelcome: TextView
+    private lateinit var sharedPreferences: SharedPreferences
     private lateinit var btnLogout: TextView
     private lateinit var holderName: TextView
-    private lateinit var buttonNavDeposit : Button
+    private lateinit var buttonNavDeposit: Button
     private lateinit var tvTotalAmount: TextView
 
-//    monthly budget
+    //    monthly budget
     private lateinit var tvBudgetStatus: TextView
     private lateinit var btnSetBudget: TextView
     private lateinit var progressBudget: ProgressBar
@@ -40,6 +40,10 @@ class HomeActivity : AppCompatActivity() {
     private var totalSpent: Double = 0.0
 
     private val CHANNEL_ID = "budget_warning"
+    private val BUDGET_FILE = "monthly_budget.txt"
+    private val TOTAL_SPENT_FILE = "total_spent.txt"
+    private val DEPOSIT_FILE = "deposits.txt"
+    private val WITHDRAWAL_FILE = "withdrawals.txt"
 
 
     // on resume
@@ -47,6 +51,7 @@ class HomeActivity : AppCompatActivity() {
         super.onResume()
         loadTotalAmount()
         loadMonthlyBudget()
+        loadTotalSpent()
         updateTotalAmountTextView()
         updateBudgetProgress()
     }
@@ -74,9 +79,10 @@ class HomeActivity : AppCompatActivity() {
 
         displayWelcomeMessage()
         loadTotalAmount()
+        loadMonthlyBudget()
+        loadTotalSpent()
         updateTotalAmountTextView()
         updateBudgetProgress()
-        loadMonthlyBudget()
 
         btnLogout.setOnClickListener {
             logoutUser()
@@ -96,7 +102,7 @@ class HomeActivity : AppCompatActivity() {
         createNotificationChannel()
     }
 
-    private fun displayWelcomeMessage(){
+    private fun displayWelcomeMessage() {
         val uName = sharedPreferences.getString("name", "User")
         val uEmail = sharedPreferences.getString("email", "")
 
@@ -118,29 +124,27 @@ class HomeActivity : AppCompatActivity() {
     // load total amount
     private fun loadTotalAmount() {
         totalAmount = 0.00
-        totalSpent = 0.00
 
         try {
-            val file = File(filesDir, "deposits.txt")
-            if(file.exists()){
-                file.forEachLine { line ->
+            val depositFile = File(filesDir, DEPOSIT_FILE)
+            if (depositFile.exists()) {
+                depositFile.forEachLine { line ->
                     val parts = line.split(",")
-                    if(parts.isNotEmpty()) {
+                    if (parts.isNotEmpty()) {
                         totalAmount += parts[0].toDoubleOrNull() ?: 0.00
                     }
                 }
             }
-            val withdrawFile = File(filesDir, "withdrawals.txt")
-            if(withdrawFile.exists()) {
+            val withdrawFile = File(filesDir, WITHDRAWAL_FILE)
+            if (withdrawFile.exists()) {
                 withdrawFile.forEachLine {
                     val parts = it.split(",")
-                    val amount = parts[0].toDoubleOrNull() ?: 0.0
+                    val amount = parts[1].toDoubleOrNull() ?: 0.0
                     totalAmount -= amount
-                    totalSpent += amount
                 }
             }
 
-        } catch (e: IOException){
+        } catch (e: IOException) {
             e.printStackTrace()
         }
     }
@@ -160,14 +164,17 @@ class HomeActivity : AppCompatActivity() {
         input.hint = "Enter budget amount"
         builder.setView(input)
 
-        builder.setPositiveButton("set") {_, _ ->
+        builder.setPositiveButton("set") { _, _ ->
             val budgetInput = input.text.toString().toDoubleOrNull()
-            if(budgetInput != null) {
-                if(budgetInput > totalAmount) {
+            if (budgetInput != null) {
+                if (budgetInput > totalAmount) {
                     Toast.makeText(this, "Budget can't exceed total balance!", Toast.LENGTH_SHORT).show()
                 } else {
                     monthlyBudget = budgetInput
                     saveMonthlyBudget()
+                    // Clear total spent when a new budget is set
+                    totalSpent = 0.0
+                    saveTotalSpent()
                     updateBudgetProgress()
                     Toast.makeText(this, "Budget set: $monthlyBudget", Toast.LENGTH_SHORT).show()
                 }
@@ -183,12 +190,13 @@ class HomeActivity : AppCompatActivity() {
 
     // update budget progress
     private fun updateBudgetProgress() {
-        if(monthlyBudget > 0) {
+        if (monthlyBudget > 0) {
             val progress = ((totalSpent / monthlyBudget) * 100).toInt()
             progressBudget.progress = progress.coerceAtMost(100)
-            tvBudgetStatus.text = "Spent: ${String.format("%.2f", totalSpent)} / ${String.format("%.2f", monthlyBudget)}"
+            tvBudgetStatus.text =
+                "${String.format("%.2f", totalSpent)} / ${String.format("%.2f", monthlyBudget)}"
 
-            if(progress >= 90) {
+            if (progress >= 90) {
                 sendBudgetWarningNotification()
             }
 
@@ -200,10 +208,11 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun createNotificationChannel() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "Budget Warning", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = "Notifications for budget warnings"
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel =
+                NotificationChannel(CHANNEL_ID, "Budget Warning", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = "Notifications for budget warnings"
+                }
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
     }
@@ -220,18 +229,37 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun saveMonthlyBudget() {
-        val file = File(filesDir, "monthly_budget.txt")
+        val file = File(filesDir, BUDGET_FILE)
         file.writeText(monthlyBudget.toString())
     }
 
     private fun loadMonthlyBudget() {
-        val file = File(filesDir, "monthly_budget.txt")
-        if(file.exists()) {
+        val file = File(filesDir, BUDGET_FILE)
+        if (file.exists()) {
             val content = file.readText().toDoubleOrNull()
 
-            if(content != null) {
+            if (content != null) {
                 monthlyBudget = content
             }
+        }
+    }
+
+    private fun saveTotalSpent() {
+        val file = File(filesDir, TOTAL_SPENT_FILE)
+        file.writeText(totalSpent.toString())
+    }
+
+    private fun loadTotalSpent() {
+        val file = File(filesDir, TOTAL_SPENT_FILE)
+        if (file.exists()) {
+            val content = file.readText().toDoubleOrNull()
+            if (content != null) {
+                totalSpent = content
+            } else {
+                totalSpent = 0.0
+            }
+        } else {
+            totalSpent = 0.0
         }
     }
 }
