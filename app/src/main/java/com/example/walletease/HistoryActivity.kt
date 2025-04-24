@@ -1,12 +1,20 @@
 package com.example.walletease
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.Description
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class HistoryActivity : AppCompatActivity() {
 
@@ -14,6 +22,8 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var bottomNavHome: LinearLayout
     private lateinit var bottomNavAction: LinearLayout
     private lateinit var bottomNavHistory: LinearLayout
+
+    private lateinit var pieChart: PieChart
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,5 +49,62 @@ class HistoryActivity : AppCompatActivity() {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
 
+        // Pie Chart
+        pieChart = findViewById(R.id.pieChart1)
+
+        val spendingByCategory = readWithdrawalsAndGroupByCategory()
+        setupPieChart(spendingByCategory)
+
+    }
+
+    private fun readWithdrawalsAndGroupByCategory(): Map<String, Float> {
+        val categoryTotals = mutableMapOf<String, Float>()
+
+        try {
+            val reader = BufferedReader(InputStreamReader(openFileInput("withdrawals.txt")))
+            reader.forEachLine { line ->
+                val parts = line.split(",")
+                if(parts.size >= 2) {
+                    val category = parts[0]
+                    val amount = parts[1].toFloatOrNull() ?: 0f
+                    categoryTotals[category] = categoryTotals.getOrDefault(category, 0f) + amount
+                }
+            }
+            reader.close()
+
+        }catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return  categoryTotals
+    }
+
+    private fun setupPieChart(categoryData: Map<String, Float>) {
+        val entries = ArrayList<PieEntry>()
+        categoryData.forEach { (category, total) ->
+            entries.add(PieEntry(total, category))
+        }
+
+        val dataSet = PieDataSet(entries, "Spending by Category")
+        dataSet.setColors(
+            Color.rgb(244, 67, 54),
+            Color.rgb(33, 150, 243),
+            Color.rgb(76, 175, 80),
+            Color.rgb(255, 193, 7),
+            Color.rgb(156, 39, 176),
+            Color.rgb(255, 87, 34)
+        )
+        dataSet.valueTextColor = Color.BLACK
+        dataSet.valueTextSize = 16f
+
+        val pieData = PieData(dataSet)
+
+        pieChart.data = pieData
+        pieChart.setUsePercentValues(true)
+        pieChart.description = Description().apply { text = "Spending Breakdown" }
+        pieChart.setEntryLabelColor(Color.BLACK)
+        pieChart.setEntryLabelTextSize(14f)
+        pieChart.centerText = "Spending"
+        pieChart.animateY(1000)
+        pieChart.invalidate()
     }
 }
