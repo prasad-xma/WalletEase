@@ -30,4 +30,8 @@
     <string name="headerbg">headerBg</string>
     <string name="history">History</string>
     <string name="scrollview">ScrollView</string>
+    <string name="deposit_txt">Deposit Money</string>
+    <string name="amount_txt">Amount:</string>
+    <string name="withdraw_money">Withdraw Money</string>
+    <string name="withdraw">Withdraw</string>
 </resources>

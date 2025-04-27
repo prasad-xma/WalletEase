@@ -294,7 +294,7 @@ class HomeActivity : AppCompatActivity() {
             val progress = ((totalSpent / monthlyBudget) * 100).toInt()
             progressBudget.progress = progress.coerceAtMost(100)
             tvBudgetStatus.text =
-                "${String.format("%.2f", totalSpent)} / ${String.format("%.2f", monthlyBudget)}"
+                "Rs. ${String.format("%.2f", totalSpent)} / ${String.format("%.2f", monthlyBudget)}"
 
             if (progress >= BUDGET_NEAR_LIMIT_PERCENTAGE * 100) {
                 sendBudgetWarningNotification()
